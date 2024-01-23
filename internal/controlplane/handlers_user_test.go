@@ -35,6 +35,7 @@ import (
 	mockdb "github.com/stacklok/minder/database/mock"
 	"github.com/stacklok/minder/internal/auth"
 	mockjwt "github.com/stacklok/minder/internal/auth/mock"
+	"github.com/stacklok/minder/internal/authz/mock"
 	serverconfig "github.com/stacklok/minder/internal/config/server"
 	"github.com/stacklok/minder/internal/crypto"
 	"github.com/stacklok/minder/internal/db"
@@ -78,7 +79,7 @@ func TestCreateUserDBMock(t *testing.T) {
 					CreateOrganization(gomock.Any(), gomock.Any()).
 					Return(db.Project{ID: orgID}, nil)
 				store.EXPECT().
-					CreateProject(gomock.Any(), gomock.Any()).
+					CreateProjectWithID(gomock.Any(), gomock.Any()).
 					Return(db.Project{
 						ID: projectID,
 						ParentID: uuid.NullUUID{
@@ -151,6 +152,7 @@ func TestCreateUserDBMock(t *testing.T) {
 				cfg:          &serverconfig.Config{},
 				cryptoEngine: crypeng,
 				vldtr:        mockJwtValidator,
+				authzClient:  &mock.NoopClient{Authorized: true},
 			}
 
 			resp, err := server.CreateUser(ctx, tc.req)
@@ -183,7 +185,7 @@ func TestCreateUser_gRPC(t *testing.T) {
 					CreateOrganization(gomock.Any(), gomock.Any()).
 					Return(db.Project{ID: orgID}, nil)
 				store.EXPECT().
-					CreateProject(gomock.Any(), gomock.Any()).
+					CreateProjectWithID(gomock.Any(), gomock.Any()).
 					Return(db.Project{
 						ID: projectID,
 						ParentID: uuid.NullUUID{
@@ -357,6 +359,7 @@ func TestDeleteUserDBMock(t *testing.T) {
 		},
 		vldtr:        mockJwtValidator,
 		cryptoEngine: crypeng,
+		authzClient:  &mock.NoopClient{Authorized: true},
 	}
 
 	response, err := server.DeleteUser(ctx, request)
